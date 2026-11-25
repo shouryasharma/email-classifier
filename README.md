@@ -38,7 +38,7 @@ Open [http://localhost:3000](http://localhost:3000).
 Deploy this repository root as a Linux Node.js App Service. The server already uses Azure's
 `PORT` environment variable.
 
-1. Create an App Service with a current Node.js LTS runtime.
+1. Create an App Service with the Node.js 24 LTS runtime.
 2. Add these **Application settings** in Azure; do not deploy `.env.local`:
    - `OPENAI_API_KEY`
    - `OPENAI_MODEL` (optional)
