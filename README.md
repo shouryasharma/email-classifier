@@ -1,2 +1,2 @@
-# emai-classifier
+# email-classifier
 emai-classifier
