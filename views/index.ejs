@@ -1,6 +1,63 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="An LLM-powered email classifier playground."><title>Mailroom — Email Classifier Playground</title><link rel="stylesheet" href="/styles.css"></head>
-<body><main class="shell">
-<section class="sample-strip" aria-label="Sample emails"><span class="sample-label">TRY A SAMPLE</span><button type="button" data-sample="import-error">Import error</button><button type="button" data-sample="slow-dashboard">Slow dashboard</button><button type="button" data-sample="approval-policy">Approval policy</button><button type="button" data-sample="workflow-owner">Workflow owner</button></section>
-<div class="workspace"><form id="email-form" class="composer panel"><div class="panel-heading"><div><span class="step">01</span><h2>Email input</h2></div><button type="button" class="clear" id="clear-form">Clear</button></div><label><span>FROM</span><input id="sender" name="sender" value="priya.shah@northstartrading.com" placeholder="sender@example.com"></label><label><span>SUBJECT</span><input id="subject" name="subject" value="CSV import fails after the mapping step" placeholder="Email subject"></label><label class="body-field"><span>MESSAGE</span><textarea id="body" name="body" placeholder="Paste the email body…" required>The Trade Process Optimization import gets to 92%, then shows “Unable to validate settlement date”. We used the same CSV successfully last week. Please check the validation error and let us know how to complete today’s upload.</textarea><small id="word-count"></small></label><button class="classify" id="classify-button"><span>Classify email</span><b aria-hidden="true">↗</b></button><p class="privacy">Email content is sent to the configured OpenAI model for classification.</p></form>
-<section class="results panel" aria-live="polite"><div class="panel-heading"><div><span class="step">02</span><h2>Model readout</h2></div><button type="button" class="clear hidden" id="toggle-json">{ } JSON</button></div><div class="empty-state" id="empty-state"><div class="radar"><i></i><i></i><span>?</span></div><h3>Ready when you are</h3><p>The model’s category, confidence, summary, and extracted actions will appear here.</p></div><div class="loading-state hidden" id="loading-state"><div class="scanner"></div><p>Looking for intent, urgency, and explicit asks…</p></div><div class="error-state hidden" id="error-state"><strong>Couldn’t classify this email</strong><p id="error-message"></p><small>Add OPENAI_API_KEY to .env.local, then restart the server.</small></div><div class="readout hidden" id="readout"></div><pre class="json-view hidden" id="json-view"></pre></section></div></main><script>window.MAILROOM_MODEL=<%- JSON.stringify(model) %>;</script><script src="/app.js"></script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Trade Process Optimization email classifier.">
+    <title>Trade Process Optimization Email Classifier</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/dashboard.css">
+  </head>
+  <body>
+    <main class="shell">
+      <nav class="main-nav" aria-label="Classifier views">
+        <button type="button" class="nav-link active" data-view="manual">Manual classification</button>
+        <button type="button" class="nav-link" data-view="automatic">Auto email classifications</button>
+      </nav>
+
+      <section id="manual-view">
+        <section class="sample-strip" aria-label="Sample emails">
+          <span class="sample-label">TRY A SAMPLE</span>
+          <button type="button" data-sample="import-error">Import error</button>
+          <button type="button" data-sample="slow-dashboard">Slow dashboard</button>
+          <button type="button" data-sample="approval-policy">Approval policy</button>
+          <button type="button" data-sample="workflow-owner">Workflow owner</button>
+        </section>
+
+        <div class="workspace">
+          <form id="email-form" class="composer panel">
+            <div class="panel-heading"><div><span class="step">01</span><h2>Email input</h2></div><button type="button" class="clear" id="clear-form">Clear</button></div>
+            <label><span>FROM</span><input id="sender" name="sender" value="priya.shah@northstartrading.com" placeholder="sender@example.com"></label>
+            <label><span>SUBJECT</span><input id="subject" name="subject" value="CSV import fails after the mapping step" placeholder="Email subject"></label>
+            <label class="body-field"><span>MESSAGE</span><textarea id="body" name="body" placeholder="Paste the email body…" required>The Trade Process Optimization import gets to 92%, then shows “Unable to validate settlement date”. We used the same CSV successfully last week. Please check the validation error and let us know how to complete today’s upload.</textarea><small id="word-count"></small></label>
+            <button class="classify" id="classify-button"><span>Classify email</span><b aria-hidden="true">↗</b></button>
+            <p class="privacy">Email content is sent to the configured OpenAI model for classification.</p>
+          </form>
+
+          <section class="results panel" aria-live="polite">
+            <div class="panel-heading"><div><span class="step">02</span><h2>Model readout</h2></div><button type="button" class="clear hidden" id="toggle-json">{ } JSON</button></div>
+            <div class="empty-state" id="empty-state"><div class="radar"><i></i><i></i><span>?</span></div><h3>Ready when you are</h3><p>The model’s category, confidence, summary, and extracted actions will appear here.</p></div>
+            <div class="loading-state hidden" id="loading-state"><div class="scanner"></div><p>Looking for intent, urgency, and explicit asks…</p></div>
+            <div class="error-state hidden" id="error-state"><strong>Couldn’t classify this email</strong><p id="error-message"></p><small>Add OPENAI_API_KEY to .env.local, then restart the server.</small></div>
+            <div class="readout hidden" id="readout"></div>
+            <pre class="json-view hidden" id="json-view"></pre>
+          </section>
+        </div>
+      </section>
+
+      <section id="automatic-view" class="hidden" aria-live="polite">
+        <div class="dashboard-heading">
+          <div><p class="eyebrow">AUTOMATION ACTIVITY</p><h1>Auto email classifications</h1><p>Emails sent to the automation endpoint appear here.</p></div>
+          <button type="button" class="clear" id="refresh-classifications">Refresh</button>
+        </div>
+        <p id="storage-note" class="storage-note"></p>
+        <div id="automatic-loading" class="dashboard-message hidden">Loading classifications…</div>
+        <div id="automatic-error" class="dashboard-message error hidden"></div>
+        <div id="automatic-empty" class="dashboard-message">No automatic classifications yet.</div>
+        <div id="classification-list" class="classification-list hidden"></div>
+      </section>
+    </main>
+    <script>window.MAILROOM_MODEL=<%- JSON.stringify(model) %>;</script>
+    <script src="/app.js"></script>
+  </body>
+</html>

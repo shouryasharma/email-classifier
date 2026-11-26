@@ -21,6 +21,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `GET /healthz` | Azure health check endpoint. |
 | `POST /api/classify` | Browser playground classification. |
 | `POST /api/email/classify` | Secured endpoint for a trusted Azure workflow that posts full email content. Send `x-api-key: EMAIL_INGEST_API_KEY`. |
+| `GET /api/email/classifications` | Latest automatic classifications for the dashboard. |
 | `POST /api/graph/notifications` | Microsoft Graph subscription validation and change-notification acknowledgement. |
 
 `POST /api/email/classify` accepts:
@@ -44,6 +45,7 @@ Deploy this repository root as a Linux Node.js App Service. The server already u
    - `OPENAI_MODEL` (optional)
    - `EMAIL_INGEST_API_KEY`
    - `GRAPH_CLIENT_STATE`
+   - `SQLITE_DATABASE_PATH=/home/data/classifications.db`
    - `SCM_DO_BUILD_DURING_DEPLOYMENT=true`
 3. Set the startup command to `npm start` if the portal does not detect it automatically.
 4. Deploy the repository root (including `package.json` and `package-lock.json`, excluding
@@ -63,6 +65,14 @@ Microsoft Graph validates this URL by posting a `validationToken`; the app retur
 required plain text. Standard Graph notifications contain message IDs rather than the full email,
 so use an Azure Logic App/Function or queue worker to fetch the message from Graph and post the
 normalized `sender`, `subject`, and `body` payload to `/api/email/classify`.
+
+## Automatic classifications dashboard
+
+Every successful request to `POST /api/email/classify` is shown in the **Auto email
+classifications** view and saved to SQLite. Locally, the default file is
+`data/classifications.db`. On Azure App Service, set
+`SQLITE_DATABASE_PATH=/home/data/classifications.db` so the file is on persistent App Service
+storage. Keep the App Service at one instance because SQLite isn't a shared database for scale-out.
 
 Structured model output is used to constrain the classification schema, and OpenAI response
 storage is disabled with `store: false`.

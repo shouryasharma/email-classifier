@@ -13,7 +13,7 @@ function sendClassifierError(response, error) {
   return response.status(502).json({ error: message });
 }
 
-export function createClassificationRouter({ classifier, emailIngestApiKey }) {
+export function createClassificationRouter({ classifier, emailIngestApiKey, store }) {
   const router = Router();
 
   router.post('/classify', async (request, response) => {
@@ -27,7 +27,7 @@ export function createClassificationRouter({ classifier, emailIngestApiKey }) {
     }
   });
 
-  // Use this endpoint when a trusted Azure workflow sends full email content.
+  // This endpoint receives full email content from a trusted Azure workflow.
   router.post('/email/classify', async (request, response) => {
     if (!emailIngestApiKey) return response.status(503).json({ error: 'EMAIL_INGEST_API_KEY is not configured.' });
     if (!secretsMatch(request.get('x-api-key'), emailIngestApiKey)) return response.sendStatus(401);
@@ -36,9 +36,22 @@ export function createClassificationRouter({ classifier, emailIngestApiKey }) {
     if (!email) return response.status(400).json({ error: 'Payload must contain a subject or body.' });
 
     try {
-      return response.json(await classifier.classify(email));
+      const classification = await classifier.classify(email);
+      await store.record({ email, classification });
+      return response.json(classification);
     } catch (error) {
       return sendClassifierError(response, error);
+    }
+  });
+
+  router.get('/email/classifications', async (request, response) => {
+    const requestedLimit = Number(request.query.limit);
+    const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 100) : 50;
+
+    try {
+      return response.json({ items: await store.list(limit), storage: store.mode });
+    } catch {
+      return response.status(503).json({ error: 'Automatic classifications are temporarily unavailable.' });
     }
   });
 
